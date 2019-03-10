@@ -6,6 +6,7 @@
     <artifactId>trajano</artifactId>
     <version>16.31</version>
   </parent>
+  <groupId>net.trajano.cloud</groupId>
   <artifactId>spring-cloud-docker-swarm</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>

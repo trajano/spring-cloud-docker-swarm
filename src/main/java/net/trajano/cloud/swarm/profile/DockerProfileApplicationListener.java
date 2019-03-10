@@ -10,6 +10,11 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
 /**
  * Enable the {@code docker} profile if it detects it is running inside a Docker
  * environment.
@@ -17,8 +22,12 @@ import java.util.stream.Stream;
  * @see <a href="https://stackoverflow.com/a/20012536/242042">How to determine
  *      if a process runs inside lxc/Docker?</a>
  */
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class DockerProfileApplicationListener implements
     ApplicationListener<ApplicationEnvironmentPreparedEvent> {
+
+    private static final Log LOG = LogFactory
+        .getLog(DockerProfileApplicationListener.class);
 
     /**
      * Profile name.
@@ -34,8 +43,11 @@ public class DockerProfileApplicationListener implements
     @Override
     public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
 
+        System.out.println("HERE" + Arrays.asList(event.getEnvironment().getActiveProfiles()));
         if (!Arrays.asList(event.getEnvironment().getActiveProfiles()).contains(PROFILE_NAME) && isRunningInDockerContainer()) {
+            LOG.debug("Adding 'docker' profile.");
             event.getEnvironment().addActiveProfile(PROFILE_NAME);
+            event.getEnvironment().addActiveProfile("foo");
         }
     }
 
@@ -53,6 +65,7 @@ public class DockerProfileApplicationListener implements
             .filter(c -> DOCKER_CHECK_RE.matcher(c).matches())) {
             return matched.findFirst().isPresent();
         } catch (IOException e) {
+            LOG.warn("IOException trying to process /proc/1/cgroup, assuming not running in a Docker container.");
             return false;
         }
     }
