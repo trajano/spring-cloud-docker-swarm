@@ -1,0 +1,1 @@
+org.springframework.context.ApplicationContextInitializer=net.trajano.cloud.swarm.profile.DockerSwarmApplicationContextInitializer
