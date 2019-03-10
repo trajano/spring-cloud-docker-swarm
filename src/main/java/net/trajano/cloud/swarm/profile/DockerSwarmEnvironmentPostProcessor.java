@@ -2,8 +2,11 @@ package net.trajano.cloud.swarm.profile;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import java.io.IOException;
@@ -20,8 +23,10 @@ import java.util.stream.Stream;
  * @see <a href="https://stackoverflow.com/a/20012536/242042">How to determine
  *      if a process runs inside lxc/Docker?</a>
  */
-public class DockerSwarmApplicationContextInitializer implements
-    ApplicationContextInitializer {
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
+@Configuration
+public class DockerSwarmEnvironmentPostProcessor implements
+    EnvironmentPostProcessor {
 
     /**
      * Pattern to locate in {@code /proc/1/cgroup} to determine if the application
@@ -33,25 +38,12 @@ public class DockerSwarmApplicationContextInitializer implements
      * Logger.
      */
     private static final Log LOG = LogFactory
-        .getLog(DockerSwarmApplicationContextInitializer.class);
+        .getLog(DockerSwarmEnvironmentPostProcessor.class);
 
     /**
      * Profile name.
      */
     private static final String PROFILE_NAME = "docker";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-
-        final ConfigurableEnvironment environment = configurableApplicationContext.getEnvironment();
-        if (!Arrays.asList(environment.getActiveProfiles()).contains(PROFILE_NAME) && isRunningInDockerContainer()) {
-            LOG.debug("Adding 'docker' profile.");
-            environment.addActiveProfile(PROFILE_NAME);
-        }
-    }
 
     /**
      * Checks if the application is running inside a Docker container. Determination
@@ -69,6 +61,19 @@ public class DockerSwarmApplicationContextInitializer implements
         } catch (IOException e) {
             LOG.warn("IOException trying to process /proc/1/cgroup, assuming not running in a Docker container.");
             return false;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void postProcessEnvironment(final ConfigurableEnvironment environment,
+        final SpringApplication application) {
+
+        if (!Arrays.asList(environment.getActiveProfiles()).contains(PROFILE_NAME) && isRunningInDockerContainer()) {
+            LOG.debug("Adding 'docker' profile.");
+            environment.addActiveProfile(PROFILE_NAME);
         }
     }
 }

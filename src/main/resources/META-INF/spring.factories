@@ -1,1 +1,1 @@
-org.springframework.context.ApplicationContextInitializer=net.trajano.cloud.swarm.profile.DockerSwarmApplicationContextInitializer
+org.springframework.boot.env.EnvironmentPostProcessor=net.trajano.cloud.swarm.profile.DockerSwarmEnvironmentPostProcessor
